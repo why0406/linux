@@ -5,28 +5,11 @@
 int
 callback_http(struct lws *wsi, enum lws_callback_reasons reason,
                   void *user, void *in, size_t len);
-
+#ifdef DEMO
 int
 callback_demo(struct lws *wsi, enum lws_callback_reasons reason,
                   void *user, void *in, size_t len);
-
-static struct lws_protocols protocols_demo[] = {
-    /* first protocol must always be HTTP handler */
-    {
-        .name = "http-only",
-        .callback = callback_http,
-        .per_session_data_size = 0
-    },
-    {
-        .name = "demo-protocol",        // protocol name - client and server should assign same protocol
-        .callback = callback_demo,      // callback function name
-        .per_session_data_size = 0,     // ?
-        .rx_buffer_size = (1024*512)    // ?
-    },
-    {
-        NULL, NULL, 0                   // End of list, must have add this struct array element
-    }
-};
+#endif
 
 class Orcvlws {
     public:

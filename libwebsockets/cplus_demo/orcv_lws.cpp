@@ -21,7 +21,7 @@ int callback_http(struct lws *wsi,
     return 0;
 }
 
-/*
+#ifdef DEMO
 int callback_demo(struct lws *wsi,
                  enum lws_callback_reasons reason,
                  void *user, void *in, size_t len)
@@ -90,7 +90,7 @@ static struct lws_protocols protocols_demo[] = {
         NULL, NULL, 0                   // End of list, must have add this struct array element
     }   
 };
-*/
+#endif
 
 void Orcvlws::SetSignal()
 {
@@ -153,7 +153,7 @@ int Orcvlws::ConnService()
     conn_info.origin = addr_port;
     conn_info.protocol = context_info.protocols[1].name;
 
-    conn_wsi = lws_client_connect_via_info(&conn_info); // TODO : 是否需要释放
+    conn_wsi = lws_client_connect_via_info(&conn_info);
     if(conn_wsi == NULL) {
         lwsl_err("Failed to create lws_client_connect_via_info\n");
         return -1;
@@ -197,7 +197,6 @@ Orcvlws::Orcvlws(uint32_t port, const char *addr, struct lws_protocols protocols
     context_info.iface = NULL;
     context_info.uid = -1;
     context_info.protocols = protocols;
-    cout << "---" << context_info.protocols[1].name << "---" <<context_info.protocols[1].callback << endl;
 }
 
 //==================================
@@ -205,7 +204,7 @@ Orcvlws::Orcvlws(uint32_t port, const char *addr, struct lws_protocols protocols
 //==================================
 Orcvlws::Orcvlws(uint32_t port, struct lws_protocols protocols[])
 {
-    this->port = port;
+    this->port = port; // not use
     this->addr = NULL;
     this->context = NULL;
     // local connext parameter
@@ -213,7 +212,6 @@ Orcvlws::Orcvlws(uint32_t port, struct lws_protocols protocols[])
     context_info.port = port;
     context_info.uid = -1;
     context_info.protocols = protocols; // set your protocols
-    cout << "---" << context_info.protocols[1].name << "---" <<context_info.protocols[1].callback << endl;
 }
 
 Orcvlws::~Orcvlws()
