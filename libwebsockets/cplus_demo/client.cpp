@@ -6,8 +6,10 @@
 using std::cout;
 using std::endl;
 
-#define MAX_COUNT 5
+#define MAX_COUNT 10000
 int msg_count = 0;
+
+const char *text = "1AAAAAAAA2BBBBBBBBB3CCCCCCCCC4DDDDDDDDDD5EEEEEEEEE6FFFFFFFFF7GGGGGGGGGG8HHHHHHHHHH9IIIIIIIIII10JJJJJJJJ11KKKKKKKK12LLLLLLLL13MMMMMMMM14NNNNNNNN15OOOOOOOO16PPPPPPPP17QQQQQQQQ18RRRRRRRR19SSSSSSSS20TTTTTT";
 
 int callback_client(struct lws *wsi,
                     enum lws_callback_reasons reason,
@@ -18,15 +20,19 @@ int callback_client(struct lws *wsi,
             cout << "[lws] connection established" << endl;
             break;
         }
-		case LWS_CALLBACK_CLIENT_WRITEABLE: {// 当此客户端可以发送数据时的回调
-            if (msg_count <= MAX_COUNT) {
+        case LWS_CALLBACK_CLIENT_RECEIVE: {
+            printf("%s\n", (char *)in);
+            break;
+        }
+        case LWS_CALLBACK_CLIENT_WRITEABLE: {// 当此客户端可以发送数据时的回调
+            if (msg_count < MAX_COUNT) {
                 size_t len;
                 char buf[LWS_PRE + 1024] = "";
-                // 前面LWS_PRE个字节必须留给LWS
+                // lws_write()前面LWS_PRE个字节必须留给LWS
                 memset(buf, 0, LWS_PRE + 1024);
                 char *msg = buf+LWS_PRE;
-                len = sprintf(msg,"client send %d msg", msg_count+1);
-                cout << "client send ("<<len << ") : " << msg << endl;
+                len = sprintf(msg, "%s", text);
+                cout << "client send " << msg_count+1 <<"("<<len << ") : " << msg << endl;
                 lws_write(wsi, (unsigned char*)msg, len, LWS_WRITE_TEXT);
                 msg_count++;
             }

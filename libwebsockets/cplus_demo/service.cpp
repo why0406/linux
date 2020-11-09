@@ -5,6 +5,7 @@
 
 using std::cout;
 using std::endl;
+int msg_count = 0;
 
 int callback_server(struct lws *wsi,
                     enum lws_callback_reasons reason,
@@ -25,25 +26,38 @@ int callback_server(struct lws *wsi,
         //==============================================================
         case LWS_CALLBACK_RECEIVE: {
             int fd = lws_get_socket_fd(wsi);
-            // receive "complete packets" from the client return rem = 0
-            // rem means remaining unaccepted data bytes
+#if 0
+            // TEST receive UNCOMPLETE MSG
+            CompelteMsg *p_compelteMsg = (CompelteMsg *)user;
+            int rc = get_complete_msg(wsi, p_compelteMsg, in, len);
+            if(rc) {
+                break;
+            }
+
+            std::string instr((const char *)p_compelteMsg->p_data, p_compelteMsg->len);
+            msg_count++;
+            cout << "[lws] receive " << msg_count << " msg(" << p_compelteMsg->len <<") : " << instr << endl;
+#else
             size_t rem = lws_remaining_packet_payload(wsi);
             std::string instr((const char *)in, len);
+            msg_count++;
             if(rem == 0) {
-                cout << "[lws] receive a compelete packets(" << len << "):[" << instr << "]" << endl;
+                cout << "[lws] receive " << msg_count << " msg(" << len <<") : " << instr << endl;
             } else {
-                cout << "[lws] receive a uncompelete packets(" << len << "):[" << instr << "]" << endl;
+                cout << "[lws] receive uncomplete " << msg_count << " msg(" << len <<") : " << instr << endl;
             }
-			// write back to client
+#endif
+            // write back to client
             char write_buf[64] = "";
             size_t write_len;
-            write_len = snprintf(write_buf, sizeof(write_buf), "[service] : receive from client > %s", (char *)in);
+            write_len = snprintf(write_buf, sizeof(write_buf), "[service] : msg_no=%d is ok", msg_count);
             if(write_len < 0) {
                 cout << "[lws] snprintf error!" << endl;
                 break;
             }
 
-            int rc = lws_write(wsi, (unsigned char *)write_buf, write_len, LWS_WRITE_TEXT);
+            rc = lws_write(wsi, (unsigned char *)write_buf, write_len, LWS_WRITE_TEXT);
+            //cout << "[lws] lws_write num=" << write_len << " rc=" << rc << endl;
             if (rc == -1) {
                 // TODO: need handle connection closed by somebody
             } else if ((size_t)rc != write_len) {
@@ -56,22 +70,22 @@ int callback_server(struct lws *wsi,
     return 0;
 }
 
-struct lws_protocols protocols[] = { 
+struct lws_protocols protocols[] = {
     /* first protocol must always be HTTP handler */
-    {   
+    {
         .name = "http-only",
         .callback = callback_http,
-        .per_session_data_size = 0 
-    },  
-    {   
-        .name = "conn-protocol",        // protocol name - client and server should assign same protocol
-        .callback = callback_server,    // callback function name
-        .per_session_data_size = 0,     // ?
-        .rx_buffer_size = (1024*512)    // ?
-    },  
-    {   
+        .per_session_data_size = 0
+    },
+    {
+        .name = "conn-protocol",                // protocol name - client and server should assign same protocol
+        .callback = callback_server,            // callback function name
+        .per_session_data_size = LWS_USER_SIZE, // size of user data (void *user) in callback()
+        .rx_buffer_size = LWS_RX_BUFFER_SIZE    // size of(void *in) in callback()
+    },
+    {
         NULL, NULL, 0                   // End of list, must have add this struct array element
-    }   
+    }
 };
 
 

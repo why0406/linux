@@ -8,6 +8,53 @@ using std::endl;
 
 static volatile bool exit_sig = false;
 
+//===============================================================================
+// return:
+//       0 -- alredy get complete
+//       1 -- not get complete msg,
+//            need to break and call next callback() function to get remaining msg
+//================================================================================
+int get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size_t len)
+{
+    // receive "complete packets" from the client return rem = 0
+    // rem means remaining unaccepted data bytes
+    size_t rem = lws_remaining_packet_payload(wsi);
+    // current fragment is last one in this packet return 1
+    int isFinalFragment = lws_is_final_fragment(wsi);
+    int isFirstFragment = lws_is_first_fragment(wsi);
+
+    if((rem == 0) && isFirstFragment) {
+        // current msg is compelete
+        p_compelteMsg->p_data = (char *)in;
+        p_compelteMsg->len = len;
+        p_compelteMsg->if_new_msg = true;
+        return 0;
+    } else {
+        // current msg is not complete
+        if(p_compelteMsg->len + len > LWS_MAX_MSG_SIZE) {
+            cout << "[callback] ERROR : user msg data is out of memory!" << endl;
+            exit(-1);
+        }
+
+        if(p_compelteMsg->if_new_msg) {
+            p_compelteMsg->len = 0;
+        }
+
+        p_compelteMsg->p_data = p_compelteMsg->data;
+        memcpy(p_compelteMsg->p_data + p_compelteMsg->len, (char *)in, len);
+
+        p_compelteMsg->len += len;
+        if((rem == 0) && isFinalFragment) {
+            // last fragment of uncomplete msg
+            p_compelteMsg->if_new_msg = true;
+            return 0;
+        } else {
+            p_compelteMsg->if_new_msg = false;
+            return 1;
+        }
+    }
+}
+
 void sighdl(int sig)
 {
     lwsl_notice( "signal [%d] traped\n", sig );
@@ -21,7 +68,7 @@ int callback_http(struct lws *wsi,
     return 0;
 }
 
-#ifdef DEMO
+#if 0
 int callback_demo(struct lws *wsi,
                  enum lws_callback_reasons reason,
                  void *user, void *in, size_t len)
@@ -43,13 +90,14 @@ int callback_demo(struct lws *wsi,
         //==============================================================
         case LWS_CALLBACK_RECEIVE: {
             int fd = lws_get_socket_fd(wsi);
+            int isFinalFragment = lws_is_final_fragment(wsi);
             // receive "complete packets" from the client return rem = 0
             // rem means remaining unaccepted data bytes
             size_t rem = lws_remaining_packet_payload(wsi);
             if(rem == 0) {
-                cout << "[lws] receive a compelete packets(" << len << "):[" << in << "]" << endl;
+                cout << "[lws] receive a compelete packets(" << len << "):[" << isFinalFragment << "]" << in  << endl;
             } else {
-                cout << "[lws] receive a uncompelete packets(" << len << "):[" << in << "]" << endl;
+                cout << "[lws] receive a uncompelete packets(" << len << "):[" << isFinalFragment << "]" << in  << endl;
             }
             // write back
             char write_buf[64] = "";
