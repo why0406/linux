@@ -2,6 +2,9 @@ set encoding=utf-8
 set fileencodings=utf-8,gb2312,gbk,gb18030,big5
 set fenc=utf-8
 set enc=utf-8
+"为命令、输入、窗口导航都激活鼠标的使用
+"按shift选中字符即可复制
+"set mouse=a
 "去掉vi一致性
 set nocompatible
 "设置行号
@@ -69,6 +72,7 @@ set laststatus=2 "不显示：1 长久显示：2
 "=========================
 "配置 ale
 "=========================
+let g:ale_c_always_make = 0
 "是否始终开启标志列
 let g:ale_sign_column_always = 0
 "高亮语法错误处
@@ -86,9 +90,9 @@ let g:ale_echo_msg_format = '[%linter%] %s [%severity%]'
 nmap <silent> <C-k> <Plug>(ale_previous_wrap)
 nmap <silent> <C-j> <Plug>(ale_next_wrap)
 "在窗口中显示语法检查结果
-let g:ale_set_loclist = 0
-let g:ale_set_quickfix = 1
-let g:ale_open_list = 0
+"let g:ale_set_loclist = 0
+"let g:ale_set_quickfix = 1
+let g:ale_open_list = 1
 let g:ale_list_window_size = 3
 "没有语法错误时仍然保持窗口存在
 let g:ale_keep_list_window_open = 0
@@ -99,19 +103,23 @@ let g:ale_lint_on_insert_leave = 0
 let g:ale_lint_on_enter = 0
 "使用clang对c和c++进行语法检查，对python使用pylint进行语法检查
 let g:ale_linters = {
-\   'c++': ['g++'],
-\   'c': ['gcc'],
+\   'c++': ['clang++'],
+\   'cpp': ['clang++'],
+\   'c': ['clang'],
 \   'python': ['pylint'],
 \}
-
 "=========================
 "目录NerdTree
 "=========================
+let g:NERDTreeWinSize=20
 "设置F3显示或隐藏NerdTree
-map <F3> :NERDTreeMirror<CR>
-map <F3> :NERDTreeToggle<CR>
+map <F11> :NERDTreeMirror<CR>
+map <F11> :NERDTreeToggle<CR>
 "Delete help information at the top
 let NERDTreeMinimalUI=1
+let NERDTreeDirArrows=1
+"如果打开的窗口只有NERDTree窗口时，直接退出vim
+autocmd bufenter * if (winnr("$") == 1 && exists("b:NERDTree") && b:NERDTree.isTabTree()) | q | endif
 
 "=========================
 "nerdtree-git-plugin
@@ -133,7 +141,15 @@ let g:NERDTreeGitStatusIndicatorMapCustom = {
 "=========================
 "ctag
 "=========================
-map <silent> <F10> :TlistToggle<cr> 
+map <silent> <F9> :TlistToggle<cr>
+
+"=========================
+"MiniBufExplorer
+"=========================
+map <silent> <F12>   :MBEToggle<CR>
+
+map <silent> <C-Right>  :MBEbn<CR>
+map <silent> <C-Left>   :MBEbp<CR>
 
 "=========================
 " vim-plus 配置
@@ -145,5 +161,6 @@ Plug 'preservim/NERDTree'
 Plug 'vim-scripts/taglist.vim'
 Plug 'ludovicchabant/vim-gutentags'
 Plug 'Xuyuanp/nerdtree-git-plugin'
+Plug 'fholgado/minibufexpl.vim'
 call plug#end()
 
