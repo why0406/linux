@@ -27,17 +27,18 @@ int get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size
         // current msg is compelete
         p_compelteMsg->p_data = (char *)in;
         p_compelteMsg->len = len;
-        p_compelteMsg->if_new_msg = true;
         return 0;
     } else {
         // current msg is not complete
+
+        // 每一条新的消息,len=0
+        if((rem != 0) && isFirstFragment) {
+            p_compelteMsg->len = 0;
+        }
+
         if(p_compelteMsg->len + len > LWS_MAX_MSG_SIZE) {
             cout << "[callback] ERROR : user msg data is out of memory!" << endl;
             exit(-1);
-        }
-
-        if(p_compelteMsg->if_new_msg) {
-            p_compelteMsg->len = 0;
         }
 
         p_compelteMsg->p_data = p_compelteMsg->data;
@@ -46,10 +47,8 @@ int get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size
         p_compelteMsg->len += len;
         if((rem == 0) && isFinalFragment) {
             // last fragment of uncomplete msg
-            p_compelteMsg->if_new_msg = true;
             return 0;
         } else {
-            p_compelteMsg->if_new_msg = false;
             return 1;
         }
     }

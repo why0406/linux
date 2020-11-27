@@ -25,8 +25,8 @@ int callback_server(struct lws *wsi,
         // 3. size_t len 是in的长度
         //==============================================================
         case LWS_CALLBACK_RECEIVE: {
-            int fd = lws_get_socket_fd(wsi);
-#if 0
+            //int fd = lws_get_socket_fd(wsi);
+#if 1
             // TEST receive UNCOMPLETE MSG
             CompelteMsg *p_compelteMsg = (CompelteMsg *)user;
             int rc = get_complete_msg(wsi, p_compelteMsg, in, len);
@@ -36,7 +36,8 @@ int callback_server(struct lws *wsi,
 
             std::string instr((const char *)p_compelteMsg->p_data, p_compelteMsg->len);
             msg_count++;
-            cout << "[lws] receive " << msg_count << " msg(" << p_compelteMsg->len <<") : " << instr << endl;
+            cout << "[lws] receive " << msg_count << " msg(" << p_compelteMsg->len <<")" << endl;
+            //cout << " : " << instr << endl;
 #else
             size_t rem = lws_remaining_packet_payload(wsi);
             std::string instr((const char *)in, len);
@@ -50,7 +51,8 @@ int callback_server(struct lws *wsi,
             // write back to client
             char write_buf[64] = "";
             size_t write_len;
-            write_len = snprintf(write_buf, sizeof(write_buf), "[service] : msg_no=%d is ok", msg_count);
+            write_len = snprintf(write_buf, sizeof(write_buf),
+                   "[service] : msg_no=%d is ok, len=%ld", msg_count, p_compelteMsg->len);
             if(write_len < 0) {
                 cout << "[lws] snprintf error!" << endl;
                 break;
@@ -65,7 +67,8 @@ int callback_server(struct lws *wsi,
             }
             break;
         }
-
+        default:
+            break;
     }
     return 0;
 }

@@ -8,8 +8,6 @@
 
 typedef struct _compelteMsg {
     size_t len;
-    // 一条完整消息接收后,if_new_msg=true,方便下次将len=0
-    bool if_new_msg;
     char *p_data;
     /*一次就接收到完整消息时p_data直接指向in,否则指向data[]并把in memcpy到data[],
     这样避免一次就接收到完整消息时也向data[]进行memcpy*/
