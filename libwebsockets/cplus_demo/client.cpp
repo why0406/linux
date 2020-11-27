@@ -21,7 +21,8 @@ int callback_client(struct lws *wsi,
             break;
         }
         case LWS_CALLBACK_CLIENT_RECEIVE: {
-            printf("%s\n", (char *)in);
+            //lwsl_err( "%s\n", (char *) in );
+            printf("%s\n", (char *)in); fflush(stdout);
             break;
         }
         case LWS_CALLBACK_CLIENT_WRITEABLE: {// 当此客户端可以发送数据时的回调
@@ -32,8 +33,10 @@ int callback_client(struct lws *wsi,
                 memset(buf, 0, LWS_PRE + 1024);
                 char *msg = buf+LWS_PRE;
                 len = sprintf(msg, "%s", text);
-                cout << "client send " << msg_count+1 <<"("<<len << ") : " << msg << endl;
                 lws_write(wsi, (unsigned char*)msg, len, LWS_WRITE_TEXT);
+
+                lwsl_err("client send msg_no=%d msg_len=%ld\n", msg_count+1, len);
+                //cout << msg << endl;
                 msg_count++;
             }
             break;
