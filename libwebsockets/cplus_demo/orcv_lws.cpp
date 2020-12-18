@@ -9,12 +9,16 @@ using std::endl;
 static volatile bool exit_sig = false;
 
 //===============================================================================
+// note:
+//       接收缓冲区大小设置为LWS_RX_BUFFER_SIZE,单条msg理论最大值不会超过此值
+//       如果单条消息等于LWS_MAX_MSG_SIZE,此消息可能是不完整的,应该被忽略
+//       应该和客户端约定发送消息最大值为LWS_MAX_MSG_SIZE-1
 // return:
 //       0 -- alredy get complete
 //       1 -- not get complete msg,
 //            need to break and call next callback() function to get remaining msg
 //================================================================================
-int get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size_t len)
+int get_complete_msg(struct lws *wsi, CompleteMsg *p_completeMsg, void *in, size_t len)
 {
     // receive "complete packets" from the client return rem = 0
     // rem means remaining unaccepted data bytes
@@ -25,26 +29,28 @@ int get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size
 
     if((rem == 0) && isFirstFragment) {
         // current msg is compelete
-        p_compelteMsg->p_data = (char *)in;
-        p_compelteMsg->len = len;
+        p_completeMsg->p_data = (char *)in;
+        p_completeMsg->len = len;
         return 0;
     } else {
         // current msg is not complete
 
         // 每一条新的消息,len=0
         if((rem != 0) && isFirstFragment) {
-            p_compelteMsg->len = 0;
+            p_completeMsg->len = 0;
         }
 
-        if(p_compelteMsg->len + len > LWS_MAX_MSG_SIZE) {
+        if(p_completeMsg->len + len >= LWS_MAX_MSG_SIZE) {
             cout << "[callback] ERROR : user msg data is out of memory!" << endl;
-            exit(-1);
+            p_completeMsg->len = LWS_MAX_MSG_SIZE;
+            goto out;
         }
 
-        p_compelteMsg->p_data = p_compelteMsg->data;
-        memcpy(p_compelteMsg->p_data + p_compelteMsg->len, (char *)in, len);
+        p_completeMsg->p_data = p_completeMsg->data;
+        memcpy(p_completeMsg->p_data + p_completeMsg->len, (char *)in, len);
 
-        p_compelteMsg->len += len;
+        p_completeMsg->len += len;
+out:
         if((rem == 0) && isFinalFragment) {
             // last fragment of uncomplete msg
             return 0;

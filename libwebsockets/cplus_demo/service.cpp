@@ -28,15 +28,20 @@ int callback_server(struct lws *wsi,
             //int fd = lws_get_socket_fd(wsi);
 #if 1
             // TEST receive UNCOMPLETE MSG
-            CompelteMsg *p_compelteMsg = (CompelteMsg *)user;
-            int rc = get_complete_msg(wsi, p_compelteMsg, in, len);
+            CompleteMsg *p_completeMsg = (CompleteMsg *)user;
+            int rc = get_complete_msg(wsi, p_completeMsg, in, len);
             if(rc) {
                 break;
             }
 
-            std::string instr((const char *)p_compelteMsg->p_data, p_compelteMsg->len);
+            if (p_completeMsg->len == LWS_MAX_MSG_SIZE) {
+                cout << "lws (void *)in is out of memory, ignore this msg!" << endl;
+                break;
+            }
+
+            std::string instr((const char *)p_completeMsg->p_data, p_completeMsg->len);
             msg_count++;
-            cout << "[lws] receive " << msg_count << " msg(" << p_compelteMsg->len <<")" << endl;
+            cout << "[lws] receive " << msg_count << " msg(" << p_completeMsg->len <<")" << endl;
             //cout << " : " << instr << endl;
 #else
             size_t rem = lws_remaining_packet_payload(wsi);
@@ -52,7 +57,7 @@ int callback_server(struct lws *wsi,
             char write_buf[64] = "";
             size_t write_len;
             write_len = snprintf(write_buf, sizeof(write_buf),
-                   "[service] : msg_no=%d is ok, len=%ld", msg_count, p_compelteMsg->len);
+                   "[service] : msg_no=%d is ok, len=%ld", msg_count, p_completeMsg->len);
             if(write_len < 0) {
                 cout << "[lws] snprintf error!" << endl;
                 break;

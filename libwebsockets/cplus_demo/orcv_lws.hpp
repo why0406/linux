@@ -4,18 +4,18 @@
 
 #define LWS_USER_SIZE      (16*1024)
 #define LWS_MAX_MSG_SIZE   (8*1024)
-#define LWS_RX_BUFFER_SIZE (512*1024)
+#define LWS_RX_BUFFER_SIZE (8*1024)
 
-typedef struct _compelteMsg {
+typedef struct _completeMsg {
     size_t len;
     char *p_data;
     /*一次就接收到完整消息时p_data直接指向in,否则指向data[]并把in memcpy到data[],
     这样避免一次就接收到完整消息时也向data[]进行memcpy*/
     char data[LWS_MAX_MSG_SIZE];
-} CompelteMsg;
+} CompleteMsg;
 
 int
-get_complete_msg(struct lws *wsi, CompelteMsg *p_compelteMsg, void *in, size_t len);
+get_complete_msg(struct lws *wsi, CompleteMsg *p_completeMsg, void *in, size_t len);
 
 int
 callback_http(struct lws *wsi, enum lws_callback_reasons reason,
